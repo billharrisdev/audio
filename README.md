@@ -110,6 +110,7 @@ To activate real separation:
 1. Provide a quantized ONNX model at `src/assets/models/mdx_demucs_4stem_q.onnx` (or adjust path/ID in registry).
 2. Update worker code to perform correct preprocessing (STFT / normalization) and map real output tensor names to stems.
 3. (Optional) Implement chunked streaming to reduce peak memory usage for long tracks.
+ 4. (Optional) Host the model via CDN / GitHub Release and update the URL in `model-registry.ts` to avoid inflating the repo size.
 
 
 ### License & Audio Samples
