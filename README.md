@@ -97,6 +97,21 @@ src/
 - Drag & drop & mobile refinements.
 - Caching & model lazy loading.
 
+### ML Separation (Experimental)
+
+An experimental scaffold for a quantized MDX-Demucs 4-stem ONNX model is included:
+
+- Model registry: `src/app/services/ml/model-registry.ts`
+- Worker-based inference: `src/app/workers/onnx-separator.worker.ts`
+- Lazy-loading runtime: `onnxruntime-web` imported dynamically inside the worker to keep initial bundle small.
+- UI toggle: Enable "Use ML Model" in the main page to attempt model-based separation (currently placeholder behavior until a real model is supplied).
+
+To activate real separation:
+1. Provide a quantized ONNX model at `src/assets/models/mdx_demucs_4stem_q.onnx` (or adjust path/ID in registry).
+2. Update worker code to perform correct preprocessing (STFT / normalization) and map real output tensor names to stems.
+3. (Optional) Implement chunked streaming to reduce peak memory usage for long tracks.
+
+
 ### License & Audio Samples
 
 Sample audio (if added later) must retain original licenses/attribution. Current demo includes only a tiny embedded CC0 clip for demonstration. Replace with properly licensed content for broader use.
