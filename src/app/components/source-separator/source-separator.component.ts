@@ -26,8 +26,14 @@ export class SourceSeparatorComponent {
   selectedModel = signal<string>(MODEL_REGISTRY[0]?.id || '');
   mlLoading = computed(() => this.useML() && this.onnx.progress()?.stage !== 'done' && this.isProcessing());
 
+  // Sample clips defined statically. If you add/remove samples in `src/assets/samples`,
+  // update this list (or replace with a runtime fetch of a manifest JSON if desired).
+  // The repo ships with placeholder file names – run `npm run fetch:samples` (after you
+  // review the script + licenses) to download Creative Commons samples.
   sampleClips: { name: string; url: string }[] = [
-    { name: 'CC0 Demo Clip', url: 'assets/samples/cc0_demo_clip.mp3' }
+    { name: 'Darkest Child (Kevin MacLeod, CC BY 3.0)', url: 'assets/samples/indie_rock_excerpt.mp3' },
+    { name: 'In a Heartbeat (Kevin MacLeod, CC BY 3.0)', url: 'assets/samples/female_vocal_guitar_excerpt.mp3' },
+    { name: 'For Originz (Kevin MacLeod, CC BY 3.0)', url: 'assets/samples/for_originz.mp3' }
   ];
 
   constructor(private svc: AudioSeparationService, private onnx: OnnxSeparatorService) {}

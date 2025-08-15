@@ -8,8 +8,10 @@
     "start": "ng serve --port 4200",
     "build": "ng build --configuration production --base-href /audio/",
     "build:dev": "ng build",
-    "deploy:gh": "npm run build && npx gh-pages -d dist/audio-app/browser -b gh-pages -t true",
-    "lint": "ng lint"
+  "deploy:gh": "npm run build && npx gh-pages -d dist/audio-app/browser -b gh-pages -t true",
+  "lint": "ng lint",
+  "fetch:samples": "node ./scripts/fetch-samples.mjs",
+  "trim:samples": "node ./scripts/trim-samples.mjs indie_rock_excerpt.mp3 female_vocal_guitar_excerpt.mp3 for_originz.mp3"
   },
   "dependencies": {
     "@angular/animations": "17.3.0",
@@ -31,6 +33,7 @@
     "@angular/compiler-cli": "17.3.0",
     "@types/node": "20.11.19",
     "gh-pages": "6.1.1",
-    "typescript": "5.3.3"
+  "typescript": "5.3.3",
+  "ffmpeg-static": "5.2.0"
   }
 }

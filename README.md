@@ -43,6 +43,16 @@ npm start
 
 Then open: http://localhost:4200
 
+### Optional: Fetch Creative Commons Sample Clips
+
+By default only placeholder file names are referenced. To download short Creative Commons / CC0 demo excerpts (verify licenses yourself):
+
+```bash
+npm run fetch:samples
+```
+
+This downloads a few <30s excerpts into `src/assets/samples/` and writes `attribution.json` containing required attribution strings. Review and prune before distributing.
+
 ### Building
 
 ```bash
