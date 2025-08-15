@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AudioSeparationService, SeparationTarget } from '../../services/audio-separation.service';
 import { WavEncoder } from '../../util/wav-encoder';
@@ -30,13 +30,23 @@ export class SourceSeparatorComponent {
   // update this list (or replace with a runtime fetch of a manifest JSON if desired).
   // The repo ships with placeholder file names – run `npm run fetch:samples` (after you
   // review the script + licenses) to download Creative Commons samples.
-  sampleClips: { name: string; url: string }[] = [
-    { name: 'Darkest Child (Kevin MacLeod, CC BY 3.0)', url: 'assets/samples/indie_rock_excerpt.mp3' },
-    { name: 'In a Heartbeat (Kevin MacLeod, CC BY 3.0)', url: 'assets/samples/female_vocal_guitar_excerpt.mp3' },
-    { name: 'For Originz (Kevin MacLeod, CC BY 3.0)', url: 'assets/samples/for_originz.mp3' }
-  ];
+  sampleClips: { name: string; url: string }[] = [];
 
-  constructor(private svc: AudioSeparationService, private onnx: OnnxSeparatorService) {}
+  constructor(private svc: AudioSeparationService, private onnx: OnnxSeparatorService) {
+    // Attempt dynamic load of attribution manifest to build sample list.
+    // Falls back silently if not available.
+    fetch('assets/samples/attribution.json')
+      .then(r => r.ok ? r.json() : [])
+      .then((items: any[]) => {
+        if (Array.isArray(items)) {
+          this.sampleClips = items.map(it => ({
+            name: `${it.title} (${it.artist}, ${it.license})`,
+            url: `assets/samples/${it.file}`
+          }));
+        }
+      })
+      .catch(()=>{});
+  }
 
   async handleFile(event: Event) {
     const input = event.target as HTMLInputElement;
