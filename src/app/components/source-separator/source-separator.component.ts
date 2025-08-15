@@ -1,7 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AudioSeparationService, SeparationTarget } from '../../services/audio-separation.service';
 import { WavEncoder } from '../../util/wav-encoder';
+import { OnnxSeparatorService } from '../../services/ml/onnx-separator.service';
+import { MODEL_REGISTRY } from '../../services/ml/model-registry';
 
 @Component({
   selector: 'app-source-separator',
@@ -18,11 +20,17 @@ export class SourceSeparatorComponent {
   processedUrl = signal<string | null>(null);
   originalBuffer: AudioBuffer | null = null;
 
+  // ML separation state
+  useML = signal(false);
+  models = MODEL_REGISTRY;
+  selectedModel = signal<string>(MODEL_REGISTRY[0]?.id || '');
+  mlLoading = computed(() => this.useML() && this.onnx.progress()?.stage !== 'done' && this.isProcessing());
+
   sampleClips: { name: string; url: string }[] = [
     { name: 'CC0 Demo Clip', url: 'assets/samples/cc0_demo_clip.mp3' }
   ];
 
-  constructor(private svc: AudioSeparationService) {}
+  constructor(private svc: AudioSeparationService, private onnx: OnnxSeparatorService) {}
 
   async handleFile(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -59,10 +67,27 @@ export class SourceSeparatorComponent {
     this.error.set(null);
     this.processedUrl.set(null);
     try {
-      const separated = await this.svc.removeStem(this.originalBuffer, target, (p)=>this.progress.set(p));
-      const wavBlob = WavEncoder.encodeWav(separated);
-      const url = URL.createObjectURL(wavBlob);
-      this.processedUrl.set(url);
+      if (this.useML()) {
+        // Ensure model loaded
+        if (!this.onnx.currentModel() || this.onnx.currentModel()!.id !== this.selectedModel()) {
+          await this.onnx.loadModel(this.selectedModel());
+        }
+        const outputs = await this.onnx.separate(this.originalBuffer, { onProgress: p => {
+          if (p.chunkIndex != null && p.chunkCount) {
+            this.progress.set((p.chunkIndex + 1) / p.chunkCount);
+          }
+        }});
+        // Combine stems except the removed one
+        const mix = this.combineStemsExcluding(outputs, target, this.originalBuffer.sampleRate);
+        const wavBlob = WavEncoder.encodeWav(mix);
+        const url = URL.createObjectURL(wavBlob);
+        this.processedUrl.set(url);
+      } else {
+        const separated = await this.svc.removeStem(this.originalBuffer, target, (p)=>this.progress.set(p));
+        const wavBlob = WavEncoder.encodeWav(separated);
+        const url = URL.createObjectURL(wavBlob);
+        this.processedUrl.set(url);
+      }
     } catch (e: any) {
       this.error.set(e.message || 'Processing failed');
     } finally {
@@ -70,13 +95,36 @@ export class SourceSeparatorComponent {
     }
   }
 
+  combineStemsExcluding(outputs: { name: string; audio: Float32Array[] }[], exclude: string, sampleRate: number): AudioBuffer {
+    const included = outputs.filter(o => o.name !== exclude);
+    if (!included.length) throw new Error('No stems to mix');
+    const length = Math.max(...included.map(o => o.audio[0].length));
+    const ctx = new OfflineAudioContext(2, length, sampleRate);
+    const mixBuffer = ctx.createBuffer(2, length, sampleRate);
+    included.forEach(stem => {
+      for (let ch=0; ch<2; ch++) {
+        const data = mixBuffer.getChannelData(ch);
+        const stemData = stem.audio[ch];
+        for (let i=0; i<stemData.length; i++) {
+          data[i] += stemData[i];
+        }
+      }
+    });
+    // Simple normalization
+    for (let ch=0; ch<2; ch++) {
+      const data = mixBuffer.getChannelData(ch);
+      let peak = 0; for (let i=0;i<data.length;i++) peak = Math.max(peak, Math.abs(data[i]));
+      if (peak > 1) { for (let i=0;i<data.length;i++) data[i] /= peak; }
+    }
+    return mixBuffer;
+  }
+
   download() {
     const url = this.processedUrl();
     if (!url) return;
     const a = document.createElement('a');
     a.href = url;
-    const stem = this.svc.lastTargetRemoved || 'output';
-    a.download = `${stem}-removed.wav`;
+    a.download = `output.wav`;
     a.click();
   }
 }

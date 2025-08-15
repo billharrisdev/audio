@@ -5,6 +5,20 @@
   <div class="flex wrap" style="margin-top:1rem;">
     <button *ngFor="let s of sampleClips" (click)="loadSample(s)">{{ s.name }}</button>
   </div>
+  <div style="margin-top:1rem;">
+    <label style="display:flex; align-items:center; gap:.5rem;">
+      <input type="checkbox" [checked]="useML()" (change)="useML.set($any($event.target).checked)" />
+      Use ML Model (WebAssembly)
+    </label>
+  </div>
+  <div *ngIf="useML()" style="margin-top:.5rem;">
+    <label class="small">Model:
+      <select [value]="selectedModel()" (change)="selectedModel.set($any($event.target).value)">
+        <option *ngFor="let m of models" [value]="m.id">{{ m.name }}</option>
+      </select>
+    </label>
+    <div class="small" style="margin-top:.25rem; opacity:.6;">Experimental – requires compatible ONNX model files.</div>
+  </div>
 </div>
 
 <div class="card">
@@ -17,7 +31,8 @@
   </div>
   <div *ngIf="isProcessing()" style="margin-top:1rem;">
     <progress [value]="progress()" max="1"></progress>
-    <div class="small">Processing… {{ (progress()*100) | number:'1.0-0' }}%</div>
+    <div class="small" *ngIf="!useML()">Processing… {{ (progress()*100) | number:'1.0-0' }}%</div>
+    <div class="small" *ngIf="useML()">ML {{ onnx.progress()?.message }} ({{ (progress()*100) | number:'1.0-0' }}%)</div>
   </div>
 </div>
 
