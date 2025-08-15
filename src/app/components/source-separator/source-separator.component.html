@@ -1,0 +1,33 @@
+<div class="card">
+  <h2>1. Load Audio</h2>
+  <input type="file" accept="audio/*" (change)="handleFile($event)" />
+  <div class="small" *ngIf="fileName()">Loaded: {{ fileName() }}</div>
+  <div class="flex wrap" style="margin-top:1rem;">
+    <button *ngFor="let s of sampleClips" (click)="loadSample(s)">{{ s.name }}</button>
+  </div>
+</div>
+
+<div class="card">
+  <h2>2. Choose Stem To Remove</h2>
+  <div class="flex stem-buttons wrap">
+    <button (click)="process('vocals')" [disabled]="isProcessing()">Remove Vocals</button>
+    <button (click)="process('drums')" [disabled]="isProcessing()">Remove Drums</button>
+    <button (click)="process('bass')" [disabled]="isProcessing()">Remove Bass</button>
+    <button (click)="process('guitar')" [disabled]="isProcessing()">Remove Guitar</button>
+  </div>
+  <div *ngIf="isProcessing()" style="margin-top:1rem;">
+    <progress [value]="progress()" max="1"></progress>
+    <div class="small">Processing… {{ (progress()*100) | number:'1.0-0' }}%</div>
+  </div>
+</div>
+
+<div class="card" *ngIf="processedUrl()">
+  <h2>3. Result</h2>
+  <audio [src]="processedUrl()" controls style="width:100%;"></audio>
+  <div class="audio-actions">
+    <button class="primary" (click)="download()">Download WAV</button>
+    <button (click)="processedUrl.set(null)">Discard</button>
+  </div>
+</div>
+
+<div class="alert" *ngIf="error()">{{ error() }}</div>

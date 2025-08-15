@@ -1,0 +1,1 @@
+{"ast":null,"code":"import { SourceSeparatorComponent } from './components/source-separator/source-separator.component';\nexport const routes = [{\n  path: '',\n  component: SourceSeparatorComponent\n}, {\n  path: '**',\n  redirectTo: ''\n}];","map":null,"metadata":{},"sourceType":"module","externalDependencies":[]}
