@@ -35,6 +35,9 @@ jobs:
       - name: Build
         run: npm run build -- --base-href /audio/
 
+      - name: Add 404 fallback (SPA)
+        run: cp dist/audio-app/browser/index.html dist/audio-app/browser/404.html
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
